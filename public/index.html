@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For You, Sitara</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #0a0015; }
+  ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #ff6b9d, #ffd700); border-radius: 10px; }
+
+  body {
+    background: #0a0015;
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    overflow-x: hidden;
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><text y='18' font-size='18'>✨</text></svg>"), auto;
+  }
+
+  /* ===== PRELOADER ===== */
+  #preloader {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: radial-gradient(ellipse at center, #1a0030, #0a0015);
+    z-index: 99999;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    transition: opacity 1s ease, visibility 1s ease;
+  }
+  #preloader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  .preloader-heart { font-size: 80px; animation: heartPulse 1s ease-in-out infinite; }
+  .preloader-text {
+    font-family: 'Great Vibes', cursive; font-size: 32px;
+    color: #ffd700; margin-top: 20px;
+  }
+
+  /* ===== MUSIC BUTTON ===== */
+  .music-btn {
+    position: fixed; top: 20px; right: 20px; z-index: 9999;
+    width: 50px; height: 50px; border-radius: 50%;
+    border: 2px solid #ffd700; background: rgba(255, 215, 0, 0.1);
+    color: #ffd700; font-size: 22px; cursor: pointer;
+    backdrop-filter: blur(10px); transition: all 0.3s ease;
+    animation: pulse 2s infinite;
+  }
+  .music-btn:hover { background: rgba(255, 215, 0, 0.3); transform: scale(1.1); }
+
+  /* ===== STARS CANVAS ===== */
+  #starsCanvas {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%; z-index: 0; pointer-events: none;
+  }
+
+  /* ===== FLOATING HEARTS ===== */
+  .floating-hearts {
+    position: fixed; width: 100%; height: 100%;
+    top: 0; left: 0; pointer-events: none; z-index: 1; overflow: hidden;
+  }
+  .f-heart {
+    position: absolute; bottom: -50px; font-size: 20px;
+    animation: floatUp linear infinite; opacity: 0.6;
+  }
+
+  /* ===== ENVELOPE ===== */
+  .envelope-section {
+    position: relative; z-index: 10; min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 40px 20px;
+  }
+  .envelope-container { perspective: 1000px; cursor: pointer; margin-bottom: 30px; }
+  .envelope {
+    width: 280px; height: 180px; position: relative;
+    transform-style: preserve-3d; transition: transform 0.8s ease;
+  }
+  .envelope-body {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #ff6b9d, #c44569);
+    border-radius: 10px; position: relative;
+    box-shadow: 0 10px 40px rgba(255, 107, 157, 0.4);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .envelope-body::before { content: '💌'; font-size: 60px; animation: pulse 2s infinite; }
+  .envelope-flap {
+    position: absolute; top: 0; left: 0; width: 100%; height: 50%;
+    background: linear-gradient(135deg, #ff8fab, #ff6b9d);
+    clip-path: polygon(0 0, 50% 100%, 100% 0);
+    transform-origin: top; transition: transform 0.6s ease;
+    border-radius: 10px 10px 0 0;
+  }
+  .envelope-container:hover .envelope-flap { transform: rotateX(180deg); }
+  .envelope-label {
+    font-family: 'Great Vibes', cursive; font-size: 28px; color: #ffd700;
+    margin-top: 20px; text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  }
+  .open-text { font-size: 14px; color: rgba(255,255,255,0.6); margin-top: 10px; animation: pulse 2s infinite; }
+
+  /* ===== MAIN CARD ===== */
+  .card-content {
+    display: none; position: relative; z-index: 10;
+    opacity: 0; transition: opacity 1s ease;
+  }
+  .card-content.visible { display: block; opacity: 1; }
+
+  /* ===== HERO ===== */
+  .hero {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 40px 20px; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(255, 107, 157, 0.15), transparent 70%);
+    border-radius: 50%; animation: breathe 4s ease-in-out infinite;
+  }
+  .hero-date {
+    font-size: 14px; letter-spacing: 8px; text-transform: uppercase;
+    color: #ff6b9d; margin-bottom: 20px; animation: fadeInDown 1s ease 0.3s both;
+  }
+  .hero-title {
+    font-family: 'Great Vibes', cursive; font-size: clamp(48px, 10vw, 100px);
+    background: linear-gradient(135deg, #ffd700, #ff6b9d, #ffd700, #ff6b9d);
+    background-size: 300% 300%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: gradientShift 4s ease infinite, fadeInUp 1s ease 0.5s both;
+    line-height: 1.2; filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.3));
+  }
+  .hero-subtitle {
+    font-family: 'Playfair Display', serif; font-size: clamp(18px, 3vw, 28px);
+    font-style: italic; color: rgba(255,255,255,0.8); margin-top: 15px;
+    animation: fadeInUp 1s ease 0.8s both;
+  }
+  .hero-star-name {
+    font-family: 'Great Vibes', cursive; font-size: clamp(28px, 5vw, 48px);
+    color: #ffd700; margin-top: 20px; position: relative;
+    animation: fadeInUp 1s ease 1s both;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.5), 0 0 60px rgba(255, 215, 0, 0.3);
+  }
+  .hero-star-name::before { content: '⭐ '; font-size: 0.6em; }
+  .hero-star-name::after { content: ' ⭐'; font-size: 0.6em; }
+  .scroll-indicator { position: absolute; bottom: 30px; animation: bounce 2s infinite; font-size: 28px; opacity: 0.6; }
+
+  /* ===== SECTION ===== */
+  .section {
+    min-height: 100vh; padding: 80px 20px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; position: relative;
+  }
+  .section-title {
+    font-family: 'Great Vibes', cursive; font-size: clamp(36px, 6vw, 60px);
+    text-align: center; margin-bottom: 40px;
+    background: linear-gradient(135deg, #ffd700, #ff6b9d);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.3));
+  }
+  .divider {
+    width: 150px; height: 2px;
+    background: linear-gradient(90deg, transparent, #ffd700, #ff6b9d, #ffd700, transparent);
+    margin: 0 auto 50px; position: relative;
+  }
+  .divider::after {
+    content: '💕'; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); font-size: 20px;
+    background: #0a0015; padding: 0 10px;
+  }
+
+  /* ===== LETTER ===== */
+  .letter-card {
+    max-width: 700px; width: 100%;
+    background: linear-gradient(135deg, rgba(255, 107, 157, 0.08), rgba(255, 215, 0, 0.05));
+    border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 20px;
+    padding: 50px 40px; position: relative;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255, 215, 0, 0.1);
+    opacity: 0; transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .letter-card.animate-in { opacity: 1; transform: translateY(0); }
+  .letter-card::before {
+    content: '❝'; position: absolute; top: 15px; left: 25px;
+    font-size: 60px; color: rgba(255, 215, 0, 0.15); font-family: 'Great Vibes', cursive;
+  }
+  .letter-greeting { font-family: 'Great Vibes', cursive; font-size: 32px; color: #ffd700; margin-bottom: 25px; }
+  .letter-paragraph {
+    font-family: 'Playfair Display', serif; font-size: 17px;
+    line-height: 1.9; color: rgba(255,255,255,0.85); margin-bottom: 20px; text-align: justify;
+  }
+  .letter-signature {
+    font-family: 'Great Vibes', cursive; font-size: 28px;
+    color: #ff6b9d; text-align: right; margin-top: 30px;
+  }
+
+  /* ===== HER MESSAGE SECTION ===== */
+  .her-message-section {
+    min-height: 100vh; padding: 80px 20px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; position: relative;
+  }
+  .her-msg-card {
+    max-width: 700px; width: 100%;
+    background: linear-gradient(135deg, rgba(255, 107, 157, 0.12), rgba(139, 92, 246, 0.08));
+    border: 1px solid rgba(255, 107, 157, 0.3); border-radius: 20px;
+    padding: 40px 35px; position: relative;
+    box-shadow: 0 20px 60px rgba(255, 107, 157, 0.15);
+    opacity: 0; transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .her-msg-card.animate-in { opacity: 1; transform: translateY(0); }
+  .her-msg-label {
+    font-size: 12px; letter-spacing: 4px; text-transform: uppercase;
+    color: #ff6b9d; margin-bottom: 15px;
+  }
+  .her-msg-text {
+    font-family: 'Playfair Display', serif; font-size: 17px;
+    line-height: 1.9; color: rgba(255,255,255,0.85); font-style: italic;
+  }
+  .her-msg-reply {
+    margin-top: 30px; padding-top: 25px;
+    border-top: 1px solid rgba(255, 215, 0, 0.15);
+  }
+  .her-msg-reply-label {
+    font-size: 12px; letter-spacing: 4px; text-transform: uppercase;
+    color: #ffd700; margin-bottom: 15px;
+  }
+  .her-msg-reply-text {
+    font-family: 'Playfair Display', serif; font-size: 17px;
+    line-height: 1.9; color: rgba(255,255,255,0.85);
+  }
+
+  /* ===== REASONS ===== */
+  .reasons-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px; max-width: 1000px; width: 100%; padding: 0 20px;
+  }
+  .reason-card {
+    background: linear-gradient(135deg, rgba(255, 107, 157, 0.1), rgba(139, 92, 246, 0.08));
+    border: 1px solid rgba(255, 215, 0, 0.15); border-radius: 16px;
+    padding: 30px; text-align: center;
+    transition: all 0.4s ease; opacity: 0;
+    transform: translateY(30px) scale(0.95); position: relative; overflow: hidden;
+  }
+  .reason-card.animate-in { opacity: 1; transform: translateY(0) scale(1); }
+  .reason-card::before {
+    content: ''; position: absolute; top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.05), transparent 50%);
+    animation: rotate 10s linear infinite;
+  }
+  .reason-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: rgba(255, 215, 0, 0.4);
+    box-shadow: 0 15px 40px rgba(255, 107, 157, 0.2);
+  }
+  .reason-icon { font-size: 40px; margin-bottom: 15px; display: block; position: relative; z-index: 1; }
+  .reason-title {
+    font-family: 'Playfair Display', serif; font-size: 20px;
+    color: #ffd700; margin-bottom: 10px; position: relative; z-index: 1;
+  }
+  .reason-text { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.7; position: relative; z-index: 1; }
+
+  /* ===== GALLERY ===== */
+  .gallery-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px; max-width: 1100px; width: 100%; padding: 0 20px;
+  }
+  .media-frame {
+    position: relative; border-radius: 16px; overflow: hidden;
+    background: linear-gradient(135deg, rgba(255, 107, 157, 0.15), rgba(139, 92, 246, 0.1));
+    border: 2px solid rgba(255, 215, 0, 0.2);
+    transition: all 0.5s ease; opacity: 0;
+    transform: scale(0.9) rotate(-2deg);
+  }
+  .media-frame:nth-child(even) { transform: scale(0.9) rotate(2deg); }
+  .media-frame.animate-in { opacity: 1; transform: scale(1) rotate(0deg); }
+  .media-frame:hover {
+    transform: scale(1.03) rotate(0deg) !important;
+    border-color: #ffd700;
+    box-shadow: 0 20px 50px rgba(255, 107, 157, 0.3);
+  }
+  .media-frame.photo-type { aspect-ratio: 3/4; }
+  .media-frame.video-type { aspect-ratio: 9/16; max-height: 500px; }
+  .media-frame img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .media-frame video {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .media-caption {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 30px 15px 15px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.85));
+    font-family: 'Great Vibes', cursive; font-size: 20px;
+    color: #ffd700; text-align: center;
+  }
+
+  /* ===== TIMELINE ===== */
+  .timeline { max-width: 700px; width: 100%; position: relative; padding: 20px 0; }
+  .timeline::before {
+    content: ''; position: absolute; left: 50%; top: 0; bottom: 0;
+    width: 2px; background: linear-gradient(180deg, transparent, #ffd700, #ff6b9d, #ffd700, transparent);
+    transform: translateX(-50%);
+  }
+  .timeline-item {
+    display: flex; align-items: center; margin-bottom: 50px;
+    opacity: 0; transform: translateX(-30px); transition: all 0.6s ease;
+  }
+  .timeline-item:nth-child(even) { flex-direction: row-reverse; transform: translateX(30px); }
+  .timeline-item.animate-in { opacity: 1; transform: translateX(0); }
+  .timeline-dot {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: linear-gradient(135deg, #ffd700, #ff6b9d);
+    flex-shrink: 0; position: relative; z-index: 2;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); margin: 0 20px;
+  }
+  .timeline-content {
+    flex: 1; background: linear-gradient(135deg, rgba(255, 107, 157, 0.08), rgba(255, 215, 0, 0.05));
+    border: 1px solid rgba(255, 215, 0, 0.15); border-radius: 16px;
+    padding: 25px; max-width: 280px;
+  }
+  .timeline-date { font-size: 12px; color: #ff6b9d; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
+  .timeline-title { font-family: 'Great Vibes', cursive; font-size: 24px; color: #ffd700; margin-bottom: 8px; }
+  .timeline-text { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6; }
+
+  /* ===== POEM ===== */
+  .poem-container {
+    max-width: 600px; width: 100%; text-align: center;
+    padding: 50px 40px;
+    background: linear-gradient(135deg, rgba(255, 107, 157, 0.06), rgba(139, 92, 246, 0.05));
+    border: 1px solid rgba(255, 215, 0, 0.15); border-radius: 20px;
+    opacity: 0; transform: translateY(30px); transition: all 0.8s ease;
+  }
+  .poem-container.animate-in { opacity: 1; transform: translateY(0); }
+  .poem-line {
+    font-family: 'Playfair Display', serif; font-style: italic;
+    font-size: 18px; color: rgba(255,255,255,0.85); line-height: 2.2; margin-bottom: 5px;
+  }
+  .poem-line.highlight {
+    color: #ffd700; font-size: 22px;
+    font-family: 'Great Vibes', cursive; font-style: normal;
+  }
+
+  /* ===== VALENTINE QUESTION ===== */
+  .valentine-section {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 60px 20px; position: relative; z-index: 100;
+  }
+  .valentine-question {
+    font-family: 'Great Vibes', cursive; font-size: clamp(32px, 6vw, 56px);
+    background: linear-gradient(135deg, #ffd700, #ff6b9d);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 50px; animation: pulse 2s infinite;
+  }
+  .valentine-buttons {
+    display: flex; gap: 30px; align-items: center;
+    justify-content: center; flex-wrap: wrap; position: relative;
+  }
+  .btn-yes {
+    padding: 18px 60px; font-family: 'Poppins', sans-serif;
+    font-size: 22px; font-weight: 600; border: none; border-radius: 50px;
+    background: linear-gradient(135deg, #ff6b9d, #c44569);
+    color: white; cursor: pointer; transition: all 0.3s ease;
+    box-shadow: 0 10px 30px rgba(255, 107, 157, 0.4); position: relative; z-index: 10;
+  }
+  .btn-yes:hover { transform: scale(1.15); box-shadow: 0 15px 45px rgba(255, 107, 157, 0.6); }
+  .btn-no {
+    padding: 14px 40px; font-family: 'Poppins', sans-serif; font-size: 16px;
+    border: 2px solid rgba(255,255,255,0.3); border-radius: 50px;
+    background: transparent; color: rgba(255,255,255,0.6);
+    cursor: pointer; transition: all 0.3s ease; position: relative; z-index: 10;
+  }
+  .no-message {
+    font-family: 'Great Vibes', cursive; font-size: 24px;
+    color: #ff6b9d; margin-top: 20px; min-height: 40px;
+  }
+
+  /* ===== CELEBRATION ===== */
+  .celebration {
+    display: none; position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%; z-index: 99999;
+    background: radial-gradient(ellipse at center, #1a0030, #0a0015);
+    flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 40px;
+  }
+  .celebration.active { display: flex; }
+  .celebration-title {
+    font-family: 'Great Vibes', cursive; font-size: clamp(40px, 8vw, 80px);
+    background: linear-gradient(135deg, #ffd700, #ff6b9d, #ffd700);
+    background-size: 200% 200%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: gradientShift 3s ease infinite; margin-bottom: 20px;
+  }
+  .celebration-text {
+    font-family: 'Playfair Display', serif; font-size: clamp(16px, 3vw, 24px);
+    color: rgba(255,255,255,0.9); font-style: italic;
+    max-width: 600px; line-height: 1.8;
+  }
+  .celebration-hearts { font-size: 60px; margin: 30px 0; animation: heartPulse 0.8s ease-in-out infinite; }
+
+  #confettiCanvas {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%; z-index: 999999; pointer-events: none;
+  }
+
+  .sitara-glow { position: relative; display: inline-block; }
+  .sitara-glow::after {
+    content: ''; position: absolute; top: 50%; left: 50%;
+    width: 120%; height: 120%; transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.2), transparent 60%);
+    animation: breathe 3s ease-in-out infinite; pointer-events: none;
+  }
+
+  .sparkle {
+    position: fixed; pointer-events: none; z-index: 9998;
+    font-size: 12px; animation: sparkleAnim 0.8s ease-out forwards;
+  }
+
+  /* ===== SORRY SECTION ===== */
+  .sorry-card {
+    max-width: 700px; width: 100%;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(255, 107, 157, 0.08));
+    border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 20px;
+    padding: 45px 40px; text-align: center;
+    opacity: 0; transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .sorry-card.animate-in { opacity: 1; transform: translateY(0); }
+  .sorry-text {
+    font-family: 'Playfair Display', serif; font-size: 17px;
+    line-height: 1.9; color: rgba(255,255,255,0.85);
+  }
+
+  /* ===== KEYFRAMES ===== */
+  @keyframes heartPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+  @keyframes breathe { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } }
+  @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-15px); } 60% { transform: translateY(-8px); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+  @keyframes floatUp { 0% { transform: translateY(0) rotate(0deg); opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; } }
+  @keyframes sparkleAnim { 0% { transform: scale(1) rotate(0deg); opacity: 1; } 100% { transform: scale(0) rotate(180deg); opacity: 0; } }
+  @keyframes rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .timeline::before { left: 20px; }
+    .timeline-item, .timeline-item:nth-child(even) { flex-direction: row; }
+    .timeline-dot { margin: 0 15px 0 10px; }
+    .timeline-content { max-width: 100%; }
+    .letter-card, .her-msg-card, .sorry-card { padding: 30px 25px; }
+    .valentine-buttons { flex-direction: column; gap: 15px; }
+    .gallery-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 480px) {
+    .gallery-grid { grid-template-columns: 1fr; max-width: 320px; }
+    .reasons-grid { grid-template-columns: 1fr; }
+  }
+
+  .footer {
+    text-align: center; padding: 40px 20px; position: relative; z-index: 10;
+    border-top: 1px solid rgba(255, 215, 0, 0.1);
+  }
+  .footer-text { font-family: 'Great Vibes', cursive; font-size: 24px; color: rgba(255, 215, 0, 0.6); }
+  .footer-year { font-size: 14px; color: rgba(255,255,255,0.3); margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<!-- PRELOADER -->
+<div id="preloader">
+  <div class="preloader-heart">💖</div>
+  <div class="preloader-text">This one's for you, Sitara...</div>
+</div>
+
+<canvas id="starsCanvas"></canvas>
+<div class="floating-hearts" id="floatingHearts"></div>
+<button class="music-btn" id="musicBtn" title="Play Music">🎵</button>
+<canvas id="confettiCanvas"></canvas>
+
+<!-- ===== ENVELOPE ===== -->
+<div class="envelope-section" id="envelopeSection">
+  <div class="envelope-container" onclick="openEnvelope()">
+    <div class="envelope">
+      <div class="envelope-body"></div>
+      <div class="envelope-flap"></div>
+    </div>
+  </div>
+  <div class="envelope-label">For My Sitara Noor</div>
+  <div class="open-text">~ tap to open ~</div>
+</div>
+
+<!-- ===== MAIN CARD ===== -->
+<div class="card-content" id="cardContent">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-date">February 14, 2026</div>
+    <h1 class="hero-title">Happy Valentine's Day</h1>
+    <p class="hero-subtitle">to the only girl who handles my madness and still chooses me</p>
+    <div class="hero-star-name sitara-glow">Sitara Noor</div>
+    <div class="scroll-indicator">↓</div>
+  </section>
+
+  <!-- ===== OUR PHOTOS ===== -->
+  <section class="section">
+    <h2 class="section-title">Us</h2>
+    <div class="divider"></div>
+    <div class="gallery-grid" style="max-width: 900px;">
+      <div class="media-frame photo-type animate-in" style="opacity:1; transform:none;">
+        <img src="WhatsApp Image 2026-02-14 at 3.18.19 PM.jpeg" alt="Us Together">
+        <div class="media-caption">My whole world in one picture</div>
+      </div>
+      <div class="media-frame photo-type animate-in" style="opacity:1; transform:none;">
+        <img src="WhatsApp Image 2026-02-14 at 3.18.18 PM.jpeg" alt="Us Together">
+        <div class="media-caption">Us against the world</div>
+      </div>
+      <div class="media-frame photo-type animate-in" style="opacity:1; transform:none;">
+        <img src="WhatsApp Image 2026-02-14 at 3.18.18 PM (1).jpeg" alt="My Sitara">
+        <div class="media-caption">My beautiful Sitara Noor</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== LOVE LETTER (HUMANIZED) ===== -->
+  <section class="section" id="letterSection">
+    <h2 class="section-title">Sitara, Read This...</h2>
+    <div class="divider"></div>
+    <div class="letter-card" data-animate>
+      <div class="letter-greeting">Meri Jaan,</div>
+      <p class="letter-paragraph">
+        I don't even know where to start. You know I'm not the best with words — I'm better at annoying you, fighting with you, and then coming right back to you 5 minutes later because I literally cannot breathe without talking to you. That's just who we are. And honestly? I wouldn't change a single thing about us.
+      </p>
+      <p class="letter-paragraph">
+        Thank you, Sitara. Thank you for being there for me. For spoiling me. For giving me things I dreamed of and things I never even knew I needed. We have different opinions, we fight — like A LOT, you know that better than anyone — but we're still here. We're still us. Because we both try. We both compromise. We both love each other more than what love is even called. The care we have for each other, the way we share our good days and bad days — that's real. That's ours.
+      </p>
+      <p class="letter-paragraph">
+        You showed me how I deserve to be loved. You handle me when I'm being the most annoying person on this planet. You deal with my cravings, my possessiveness, my mood swings — and you still choose me every single day. I know I'm a lot sometimes. I know my possessiveness hurts you sometimes. And wallahi, I'm sorry for every time I made you feel anything less than perfect, because that's exactly what you are to me — perfect.
+      </p>
+      <p class="letter-paragraph">
+        I don't do anything without you. I can't. My morning doesn't start without you, my evening doesn't feel right without you, and my night is incomplete if I haven't heard your voice. You are literally my world, Sitara. I don't look at anyone else. I don't think about anyone else. It's you. It's only you. It's always been you.
+      </p>
+      <p class="letter-paragraph">
+        Everything I ever dreamed of — I found it all in you. Every single thing. You are my perfect woman. The one I will InshaAllah marry and build a life with. You're my Sitara, my Noor, my light in every dark moment. And yeah, we fight like crazy. Like ALOT alot. We get naraz and act like it's the end of the world — and then 5 minutes later we're back like nothing happened. Because that's us. We're magnets. We can't stay away. We can't function without each other. And that? That's the most beautiful thing I've ever known.
+      </p>
+      <div class="letter-signature">Tumhara hamesha, forever yours 💕</div>
+    </div>
+  </section>
+
+  <!-- ===== WHAT SHE WROTE + HIS REPLY ===== -->
+  <section class="her-message-section">
+    <h2 class="section-title">What She Wrote For Me</h2>
+    <div class="divider"></div>
+    <div class="her-msg-card" data-animate>
+      <div class="her-msg-label">Her words that made my heart stop</div>
+      <p class="her-msg-text">
+        "Good morning my love. Thank you so much for always being there for me, for spoiling me, for giving me what I have dreamed of or never dreamed of. Yes we have different opinions, yes we fight a lot — a lot — but you know we are together because we both try to understand each other and we both are compromising on things for each other. And we both love each other more than what it's called. The care for each other, we both share good and bad days. But thank you so much for showing me how I should be treated. Right after my Baba, you are the only man for me who is selflessly doing things for me, making me smile, listening to my tantrums."
+      </p>
+      <div class="her-msg-reply">
+        <div class="her-msg-reply-label">And this is what I say back to you, Sitara</div>
+        <p class="her-msg-reply-text">
+          You wrote this for me, and it made me realize something — I need to say these exact same things back to you. Because Sitara, YOU are the one who is always there. YOU are the one who spoils me with love I don't deserve. YOU are the one who compromises, who tries, who stays even when I make it hard. Right after my family, you are the only woman who selflessly loves me, who handles my tantrums, who makes me smile when I don't even want to. You are my everything. And I'll spend every day proving that to you. I promise.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== I'M SORRY SECTION ===== -->
+  <section class="section">
+    <h2 class="section-title">I'm Sorry</h2>
+    <div class="divider"></div>
+    <div class="sorry-card" data-animate>
+      <p class="sorry-text">
+        I know I'm not perfect. I know my possessiveness goes too far sometimes. I know there are moments where I hurt you without even realizing it — and moments where I realize it and hate myself for it. You deserve the world, Sitara, and sometimes I feel like I'm the one who takes away from it instead of giving it to you.
+      </p>
+      <p class="sorry-text" style="margin-top: 20px;">
+        But I want you to know — I'm trying. Every single day, I'm trying to be better for you. Not because you ask me to, but because you deserve the best version of me. I'm sorry for every tear, every fight that went too far, every moment I made you feel like you weren't enough. Because you are MORE than enough. You are everything.
+      </p>
+      <p class="sorry-text" style="margin-top: 20px; color: #ffd700; font-family: 'Great Vibes', cursive; font-size: 24px;">
+        Maaf kar dena mujhe, hamesha. I love you more than you'll ever know.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===== WHY I LOVE YOU ===== -->
+  <section class="section" id="reasonsSection">
+    <h2 class="section-title">Why You're My Person</h2>
+    <div class="divider"></div>
+    <div class="reasons-grid">
+      <div class="reason-card" data-animate data-delay="0">
+        <span class="reason-icon">🧲</span>
+        <h3 class="reason-title">We're Magnets</h3>
+        <p class="reason-text">We fight, we get naraz, we say "I'm done" — and then 5 minutes later we're back. Because we literally cannot stay away from each other. That's not love. That's beyond love.</p>
+      </div>
+      <div class="reason-card" data-animate data-delay="100">
+        <span class="reason-icon">🫶</span>
+        <h3 class="reason-title">She Handles Me</h3>
+        <p class="reason-text">I'm annoying. I'm possessive. I'm dramatic. And she STILL stays. She deals with all my nonsense and loves me through it anyway. That's a different kind of woman.</p>
+      </div>
+      <div class="reason-card" data-animate data-delay="200">
+        <span class="reason-icon">🌅</span>
+        <h3 class="reason-title">My Entire Day</h3>
+        <p class="reason-text">My morning starts with her. My evening revolves around her. My night ends with her. There's not a single part of my day that doesn't have her name written in it.</p>
+      </div>
+      <div class="reason-card" data-animate data-delay="300">
+        <span class="reason-icon">👑</span>
+        <h3 class="reason-title">She's Perfect</h3>
+        <p class="reason-text">Not perfect like in the movies. Perfect for ME. The way she laughs, the way she scolds me, the way she cares — everything about her fits with everything about me.</p>
+      </div>
+      <div class="reason-card" data-animate data-delay="400">
+        <span class="reason-icon">🤲</span>
+        <h3 class="reason-title">My Future Wife InshaAllah</h3>
+        <p class="reason-text">I don't see anyone else. I don't want anyone else. She is the woman I will InshaAllah marry, build a home with, grow old with. It's her or no one.</p>
+      </div>
+      <div class="reason-card" data-animate data-delay="500">
+        <span class="reason-icon">⭐</span>
+        <h3 class="reason-title">My Sitara Noor</h3>
+        <p class="reason-text">Her name literally means light and star. And that's exactly what she is — the light in my darkest moments and the star I follow no matter where life takes me.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== OUR MEMORIES — VIDEOS & PHOTO ===== -->
+  <section class="section" id="gallerySection">
+    <h2 class="section-title">Our Memories</h2>
+    <div class="divider"></div>
+    <div class="gallery-grid">
+      <div class="media-frame video-type" data-animate>
+        <video src="WhatsApp Video 2026-02-14 at 3.18.17 PM.mp4" controls playsinline preload="metadata"></video>
+        <div class="media-caption">Where it all started 💕</div>
+      </div>
+      <div class="media-frame video-type" data-animate>
+        <video src="WhatsApp Video 2026-02-14 at 3.18.19 PM.mp4" controls playsinline preload="metadata"></video>
+        <div class="media-caption">Our moments together ✨</div>
+      </div>
+      <div class="media-frame video-type" data-animate>
+        <video src="WhatsApp Video 2026-02-14 at 3.18.19 PM (1).mp4" controls playsinline preload="metadata"></video>
+        <div class="media-caption">Making memories with you 🌙</div>
+      </div>
+      <div class="media-frame video-type" data-animate>
+        <video src="WhatsApp Video 2026-02-14 at 3.18.20 PM.mp4" controls playsinline preload="metadata"></video>
+        <div class="media-caption">Every second with you matters ⭐</div>
+      </div>
+      <div class="media-frame video-type" data-animate>
+        <video src="WhatsApp Video 2026-02-14 at 3.18.20 PM (1).mp4" controls playsinline preload="metadata"></video>
+        <div class="media-caption">You and me, always 💖</div>
+      </div>
+      <div class="media-frame video-type" data-animate>
+        <video src="WhatsApp Video 2026-02-14 at 3.23.07 PM.mp4" controls playsinline preload="metadata"></video>
+        <div class="media-caption">My favorite person 🧲</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== OUR STORY ===== -->
+  <section class="section" id="storySection">
+    <h2 class="section-title">Our Story</h2>
+    <div class="divider"></div>
+    <div class="timeline">
+      <div class="timeline-item" data-animate>
+        <div class="timeline-content">
+          <div class="timeline-date">The Beginning</div>
+          <div class="timeline-title">When We Met</div>
+          <div class="timeline-text">I didn't know it then, but the day you came into my life was the day everything started making sense. Like Allah had planned this all along.</div>
+        </div>
+        <div class="timeline-dot"></div>
+        <div class="timeline-content" style="visibility: hidden;"></div>
+      </div>
+      <div class="timeline-item" data-animate>
+        <div class="timeline-content" style="visibility: hidden;"></div>
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-date">The Chaos</div>
+          <div class="timeline-title">The Fights & The Love</div>
+          <div class="timeline-text">We fight like nobody else. Like ALOT. But that's our thing — we clash because we care too much. And we always come back because we love even more.</div>
+        </div>
+      </div>
+      <div class="timeline-item" data-animate>
+        <div class="timeline-content">
+          <div class="timeline-date">The Truth</div>
+          <div class="timeline-title">We're Magnets</div>
+          <div class="timeline-text">5 minutes. That's our record for staying naraz. We physically cannot be away from each other. We can't sleep, can't eat, can't think straight without the other person.</div>
+        </div>
+        <div class="timeline-dot"></div>
+        <div class="timeline-content" style="visibility: hidden;"></div>
+      </div>
+      <div class="timeline-item" data-animate>
+        <div class="timeline-content" style="visibility: hidden;"></div>
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-date">Right Now</div>
+          <div class="timeline-title">Still Choosing Each Other</div>
+          <div class="timeline-text">Through every fight, every tantrum, every "I'm done with you" — we're still here. Still us. Still madly, stupidly, completely in love.</div>
+        </div>
+      </div>
+      <div class="timeline-item" data-animate>
+        <div class="timeline-content">
+          <div class="timeline-date">InshaAllah</div>
+          <div class="timeline-title">Our Future</div>
+          <div class="timeline-text">One day InshaAllah, I'll make you mine — officially, properly, forever. You're the woman I want to build my entire life with. No one else. Just you.</div>
+        </div>
+        <div class="timeline-dot"></div>
+        <div class="timeline-content" style="visibility: hidden;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== POEM ===== -->
+  <section class="section" id="poemSection">
+    <h2 class="section-title">For My Star</h2>
+    <div class="divider"></div>
+    <div class="poem-container" data-animate>
+      <p class="poem-line">We fight, we scream, we say goodbye,</p>
+      <p class="poem-line">Then five minutes pass and we can't deny,</p>
+      <p class="poem-line">That you and I are magnets, jaan,</p>
+      <p class="poem-line">Can't stay apart — that's Allah's plan.</p>
+      <br>
+      <p class="poem-line">You handle me when I'm at my worst,</p>
+      <p class="poem-line">You loved me gently, you loved me first,</p>
+      <p class="poem-line highlight">Sitara Noor — my guiding light,</p>
+      <p class="poem-line">My morning sun, my peaceful night.</p>
+      <br>
+      <p class="poem-line">I'm not perfect, I know that's true,</p>
+      <p class="poem-line">But every dream I had came true in you,</p>
+      <p class="poem-line">So hear me say with all my might —</p>
+      <p class="poem-line highlight">I'll love my Sitara for the rest of my life. 💫</p>
+    </div>
+  </section>
+
+  <!-- ===== VALENTINE QUESTION ===== -->
+  <section class="valentine-section" id="valentineSection">
+    <h2 class="valentine-question" id="questionText">Sitara, Will You Be My Valentine? 💕</h2>
+    <div class="valentine-buttons" id="valentineButtons">
+      <button class="btn-yes" id="btnYes" onclick="sayYes()">Yes Jaan! 💖</button>
+      <button class="btn-no" id="btnNo" onmouseover="runAwayNo()" onclick="clickNo()">No 😢</button>
+    </div>
+    <div class="no-message" id="noMessage"></div>
+  </section>
+
+  <div class="footer">
+    <div class="footer-text">Made with everything in my heart, only for you Sitara ⭐</div>
+    <div class="footer-year">Valentine's Day 2026 — Tumhara Hamesha 💖</div>
+  </div>
+
+</div>
+
+<!-- CELEBRATION -->
+<div class="celebration" id="celebration">
+  <div class="celebration-title">I Knew It!</div>
+  <div class="celebration-hearts">💖💕💖</div>
+  <div class="celebration-text">
+    You just made this the best Valentine's Day of my life, Sitara.
+    I promise — I'll love you harder every single day.
+    You're my Valentine, my Star, my Noor, my Everything.
+    InshaAllah, hamesha tumhari hoon aur tum meri.
+  </div>
+  <div style="margin-top: 40px; font-family: 'Great Vibes', cursive; font-size: 32px; color: #ffd700;">
+    I Love You, Sitara Noor ⭐
+  </div>
+</div>
+
+<script>
+// PRELOADER
+window.addEventListener('load', () => {
+  setTimeout(() => document.getElementById('preloader').classList.add('hidden'), 2500);
+});
+
+// STARS
+const starsCanvas = document.getElementById('starsCanvas');
+const starsCtx = starsCanvas.getContext('2d');
+function resizeStars() { starsCanvas.width = window.innerWidth; starsCanvas.height = window.innerHeight; }
+resizeStars();
+window.addEventListener('resize', resizeStars);
+
+const stars = [];
+for (let i = 0; i < 200; i++) {
+  stars.push({
+    x: Math.random() * starsCanvas.width, y: Math.random() * starsCanvas.height,
+    size: Math.random() * 2 + 0.5, twinkleSpeed: Math.random() * 0.02 + 0.005,
+    twinkleOffset: Math.random() * Math.PI * 2,
+    color: Math.random() > 0.7 ? '#ffd700' : (Math.random() > 0.5 ? '#ff6b9d' : '#ffffff')
+  });
+}
+const shootingStars = [];
+function createShootingStar() {
+  shootingStars.push({
+    x: Math.random() * starsCanvas.width, y: Math.random() * starsCanvas.height * 0.5,
+    length: Math.random() * 80 + 40, speed: Math.random() * 4 + 3,
+    angle: Math.PI / 4, opacity: 1, life: 0
+  });
+}
+setInterval(createShootingStar, 3000);
+
+function animateStars() {
+  starsCtx.clearRect(0, 0, starsCanvas.width, starsCanvas.height);
+  const time = Date.now() * 0.001;
+  stars.forEach(star => {
+    const t = Math.sin(time * star.twinkleSpeed * 50 + star.twinkleOffset) * 0.5 + 0.5;
+    starsCtx.beginPath();
+    starsCtx.arc(star.x, star.y, star.size * t, 0, Math.PI * 2);
+    starsCtx.fillStyle = star.color;
+    starsCtx.globalAlpha = 0.3 + t * 0.7;
+    starsCtx.fill();
+    if (star.size > 1.5) {
+      starsCtx.beginPath();
+      starsCtx.arc(star.x, star.y, star.size * 2, 0, Math.PI * 2);
+      starsCtx.globalAlpha = 0.1 * t;
+      starsCtx.fill();
+    }
+  });
+  starsCtx.globalAlpha = 1;
+  for (let i = shootingStars.length - 1; i >= 0; i--) {
+    const ss = shootingStars[i];
+    ss.x += Math.cos(ss.angle) * ss.speed;
+    ss.y += Math.sin(ss.angle) * ss.speed;
+    ss.life++; ss.opacity = Math.max(0, 1 - ss.life / 60);
+    if (ss.opacity <= 0) { shootingStars.splice(i, 1); continue; }
+    const g = starsCtx.createLinearGradient(ss.x, ss.y, ss.x - Math.cos(ss.angle) * ss.length, ss.y - Math.sin(ss.angle) * ss.length);
+    g.addColorStop(0, `rgba(255,215,0,${ss.opacity})`);
+    g.addColorStop(1, 'rgba(255,215,0,0)');
+    starsCtx.beginPath(); starsCtx.moveTo(ss.x, ss.y);
+    starsCtx.lineTo(ss.x - Math.cos(ss.angle) * ss.length, ss.y - Math.sin(ss.angle) * ss.length);
+    starsCtx.strokeStyle = g; starsCtx.lineWidth = 2; starsCtx.stroke();
+    starsCtx.beginPath(); starsCtx.arc(ss.x, ss.y, 2, 0, Math.PI * 2);
+    starsCtx.fillStyle = `rgba(255,255,255,${ss.opacity})`; starsCtx.fill();
+  }
+  requestAnimationFrame(animateStars);
+}
+animateStars();
+
+// FLOATING HEARTS
+const heartsContainer = document.getElementById('floatingHearts');
+const heartEmojis = ['💖','💕','💗','💓','💝','✨','⭐','🌟','💫'];
+function createFloatingHeart() {
+  const h = document.createElement('span'); h.className = 'f-heart';
+  h.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+  h.style.left = Math.random() * 100 + '%';
+  h.style.fontSize = (Math.random() * 15 + 12) + 'px';
+  h.style.animationDuration = (Math.random() * 5 + 6) + 's';
+  h.style.animationDelay = Math.random() * 2 + 's';
+  heartsContainer.appendChild(h);
+  setTimeout(() => h.remove(), 12000);
+}
+setInterval(createFloatingHeart, 800);
+
+// SPARKLE TRAIL
+document.addEventListener('mousemove', e => {
+  if (Math.random() > 0.7) {
+    const s = document.createElement('span'); s.className = 'sparkle';
+    s.textContent = ['✨','⭐','💫','💖'][Math.floor(Math.random() * 4)];
+    s.style.left = e.clientX + 'px'; s.style.top = e.clientY + 'px';
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 800);
+  }
+});
+
+// ENVELOPE
+function openEnvelope() {
+  const env = document.getElementById('envelopeSection');
+  env.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+  env.style.opacity = '0'; env.style.transform = 'scale(0.8) translateY(-50px)';
+  setTimeout(() => {
+    env.style.display = 'none';
+    const card = document.getElementById('cardContent');
+    card.style.display = 'block';
+    setTimeout(() => { card.style.opacity = '1'; card.classList.add('visible'); }, 100);
+  }, 800);
+}
+
+// SCROLL ANIMATIONS
+const animEls = document.querySelectorAll('[data-animate]');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const d = entry.target.dataset.delay || 0;
+      setTimeout(() => entry.target.classList.add('animate-in'), d);
+    }
+  });
+}, { threshold: 0.2 });
+animEls.forEach(el => obs.observe(el));
+
+// VALENTINE NO BUTTON
+let noCount = 0;
+const noMsgs = [
+  "Haha nice try baby but 'No' is not an option for you 😏",
+  "Oops! That button doesn't work for my Sitara 💕",
+  "We both know you can't stay away from me for even 5 minutes 🧲",
+  "Error 404: 'No' not found in jaan's options 😘",
+  "Allah made us magnets remember? So just say YES 🤭",
+  "Your heart already screamed Yes... I heard it from here! 💖",
+  "Remember how you come back to me in 5 mins? Same energy. Say Yes. 🌙",
+  "Sitara Noor, even the stars are telling you to say YES ✨",
+  "I'll annoy you until you say Yes. You know I will. 🥰",
+  "Fine I'll just love you anyway. But SAY YES! 💫",
+  "You literally can't sleep without talking to me. Just accept it 💗",
+  "The whole universe knows you're already my Valentine! 🌌",
+];
+const yesBtn = document.getElementById('btnYes');
+const noBtn = document.getElementById('btnNo');
+let yesBtnSize = 22;
+
+function runAwayNo() {
+  if (noCount > 2) {
+    noBtn.style.position = 'relative';
+    noBtn.style.left = (Math.random() - 0.5) * 300 + 'px';
+    noBtn.style.top = (Math.random() - 0.5) * 150 + 'px';
+    noBtn.style.transition = 'all 0.3s ease';
+  }
+}
+
+function clickNo() {
+  noCount++;
+  const msg = document.getElementById('noMessage');
+  msg.textContent = noMsgs[Math.min(noCount - 1, noMsgs.length - 1)];
+  msg.style.opacity = '1';
+  yesBtnSize += 3;
+  yesBtn.style.fontSize = yesBtnSize + 'px';
+  yesBtn.style.padding = `${18 + noCount * 3}px ${60 + noCount * 8}px`;
+  const ns = Math.max(8, 16 - noCount * 1.5);
+  noBtn.style.fontSize = ns + 'px';
+  noBtn.style.padding = `${Math.max(4, 14 - noCount * 2)}px ${Math.max(10, 40 - noCount * 5)}px`;
+  noBtn.style.opacity = Math.max(0.2, 1 - noCount * 0.1);
+  if (noCount >= 5) noBtn.textContent = "Okay fine... maybe 🥺";
+  if (noCount >= 8) { noBtn.textContent = "YES JAAN! 💖"; noBtn.onclick = sayYes; }
+  if (noCount >= 10) sayYes();
+  msg.style.animation = 'none';
+  setTimeout(() => { msg.style.animation = 'fadeInUp 0.5s ease'; }, 10);
+}
+
+// CELEBRATION
+function sayYes() {
+  document.getElementById('celebration').classList.add('active');
+  launchConfetti();
+  for (let i = 0; i < 30; i++) setTimeout(createFloatingHeart, i * 100);
+}
+
+// CONFETTI
+const confCanvas = document.getElementById('confettiCanvas');
+const confCtx = confCanvas.getContext('2d');
+function resizeConf() { confCanvas.width = window.innerWidth; confCanvas.height = window.innerHeight; }
+resizeConf(); window.addEventListener('resize', resizeConf);
+const confPieces = [];
+const confColors = ['#ff6b9d','#ffd700','#ff8fab','#c44569','#e84393','#fd79a8','#f8b500','#ff6348'];
+
+function launchConfetti() {
+  for (let i = 0; i < 200; i++) {
+    confPieces.push({
+      x: Math.random() * confCanvas.width, y: -20,
+      w: Math.random() * 10 + 5, h: Math.random() * 6 + 3,
+      color: confColors[Math.floor(Math.random() * confColors.length)],
+      speed: Math.random() * 3 + 2, angle: Math.random() * Math.PI * 2,
+      spin: (Math.random() - 0.5) * 0.2, drift: (Math.random() - 0.5) * 2, opacity: 1
+    });
+  }
+  animateConf();
+  setTimeout(() => {
+    for (let i = 0; i < 100; i++) {
+      confPieces.push({
+        x: Math.random() * confCanvas.width, y: -20,
+        w: Math.random() * 10 + 5, h: Math.random() * 6 + 3,
+        color: confColors[Math.floor(Math.random() * confColors.length)],
+        speed: Math.random() * 3 + 2, angle: Math.random() * Math.PI * 2,
+        spin: (Math.random() - 0.5) * 0.2, drift: (Math.random() - 0.5) * 2, opacity: 1
+      });
+    }
+  }, 1500);
+}
+
+function animateConf() {
+  confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+  for (let i = confPieces.length - 1; i >= 0; i--) {
+    const p = confPieces[i];
+    p.y += p.speed; p.x += p.drift; p.angle += p.spin; p.opacity -= 0.002;
+    if (p.y > confCanvas.height || p.opacity <= 0) { confPieces.splice(i, 1); continue; }
+    confCtx.save(); confCtx.translate(p.x, p.y); confCtx.rotate(p.angle);
+    confCtx.globalAlpha = p.opacity; confCtx.fillStyle = p.color;
+    confCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); confCtx.restore();
+  }
+  if (confPieces.length > 0) requestAnimationFrame(animateConf);
+}
+
+// MUSIC
+let musicPlaying = false;
+const musicBtn = document.getElementById('musicBtn');
+let audioCtx;
+musicBtn.addEventListener('click', () => {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (!musicPlaying) {
+    playTone(); musicBtn.textContent = '🔇'; musicPlaying = true;
+  } else {
+    if (audioCtx) { audioCtx.close(); audioCtx = null; }
+    musicBtn.textContent = '🎵'; musicPlaying = false;
+  }
+});
+function playTone() {
+  if (!audioCtx) return;
+  const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63];
+  const dur = 0.8;
+  function seq(st) {
+    notes.forEach((f, i) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0, st + i * dur);
+      g.gain.linearRampToValueAtTime(0.08, st + i * dur + 0.1);
+      g.gain.linearRampToValueAtTime(0, st + i * dur + dur - 0.1);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(st + i * dur); o.stop(st + i * dur + dur);
+    });
+  }
+  const total = notes.length * dur;
+  for (let l = 0; l < 50; l++) seq(audioCtx.currentTime + l * total);
+}
+
+// TYPEWRITER
+const heroTitle = document.querySelector('.hero-title');
+if (heroTitle) {
+  const txt = heroTitle.textContent; heroTitle.textContent = ''; let ci = 0;
+  function tw() { if (ci < txt.length) { heroTitle.textContent += txt.charAt(ci); ci++; setTimeout(tw, 80); } }
+  const mo = new MutationObserver(muts => {
+    muts.forEach(m => { if (m.target.classList.contains('visible')) { setTimeout(tw, 500); mo.disconnect(); } });
+  });
+  mo.observe(document.getElementById('cardContent'), { attributes: true, attributeFilter: ['class'] });
+}
+
+// PARALLAX
+window.addEventListener('scroll', () => {
+  const s = window.pageYOffset;
+  const h = document.querySelector('.hero');
+  if (h) h.style.transform = `translateY(${s * 0.3}px)`;
+});
+</script>
+</body>
+</html>
